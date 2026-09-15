@@ -1,23 +1,409 @@
-<html>
-  <head>
-    <title> Find a PG</title>
-  <style>
-    html, body {
-      text-align: center;
-      align-items: center;
-      height: 100%;
-      width: 100%;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find a PG — NestFind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --ink:#23332B;
+    --paper:#F5F0E4;
+    --card:#FFFFFF;
+    --brass:#A9812E;
+    --brass-dark:#7E611F;
+    --moss:#3F5C4C;
+    --moss-deep:#23332B;
+    --line: rgba(35,51,43,0.14);
+    --muted:#5B6A5F;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    line-height:1.5;
+  }
+
+  h1, h2, h3, .display{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    letter-spacing:-0.01em;
+    color:var(--moss-deep);
+    margin:0;
+  }
+
+  a{ color:inherit; text-decoration:none; }
+
+  /* ---------- Header ---------- */
+
+  .top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    max-width:1100px;
+    margin:0 auto;
+    padding:28px 32px 0;
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Fraunces', serif;
+    font-size:1.15rem;
+    font-weight:600;
+  }
+
+  .brand svg{ width:26px; height:26px; }
+
+  .top nav a{
+    color:var(--muted);
+    font-size:0.95rem;
+    margin-left:28px;
+  }
+
+  .top nav a:hover, .top nav a.active{ color:var(--moss-deep); }
+
+  /* ---------- Search section ---------- */
+
+  .search-wrap{
+    max-width:720px;
+    margin:0 auto;
+    padding:56px 32px 20px;
+    text-align:center;
+  }
+
+  .search-wrap h1{
+    font-size:clamp(1.9rem, 3.6vw, 2.5rem);
+  }
+
+  .search-wrap p{
+    color:var(--muted);
+    margin-top:12px;
+    font-size:1.02rem;
+  }
+
+  .search-box{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:30px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:6px 6px 6px 20px;
+  }
+
+  .search-box svg{ flex-shrink:0; width:18px; height:18px; }
+
+  .search-box input{
+    flex:1;
+    border:none;
+    outline:none;
+    background:transparent;
+    font-family:'Inter', sans-serif;
+    font-size:1rem;
+    padding:14px 0;
+    color:var(--ink);
+  }
+
+  .search-box input::placeholder{ color:#8B9A8E; }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:12px 20px;
+    border-radius:9px;
+    font-size:0.95rem;
+    font-weight:500;
+    border:1px solid transparent;
+    cursor:pointer;
+    transition:transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    font-family:'Inter', sans-serif;
+  }
+
+  .btn-primary{
+    background:var(--moss-deep);
+    color:var(--paper);
+  }
+  .btn-primary:hover{ background:var(--moss); transform:translateY(-1px); }
+
+  .test-row{
+    max-width:720px;
+    margin:22px auto 0;
+    padding:0 32px;
+    display:flex;
+    justify-content:center;
+  }
+
+  .btn-test{
+    background:transparent;
+    color:var(--brass-dark);
+    border:1px dashed var(--brass);
+    font-size:0.88rem;
+    padding:9px 16px;
+  }
+  .btn-test:hover{ background:#EFE9D8; }
+
+  /* ---------- Listings ---------- */
+
+  .results{
+    max-width:900px;
+    margin:0 auto;
+    padding:40px 32px 96px;
+  }
+
+  .results-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    border-bottom:1px solid var(--line);
+    padding-bottom:14px;
+    margin-bottom:24px;
+    text-align:left;
+  }
+
+  .results-head h2{
+    font-size:1.2rem;
+    font-weight:500;
+  }
+
+  .results-head span{
+    color:var(--muted);
+    font-size:0.9rem;
+  }
+
+  .pglist{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+
+  .empty-state{
+    text-align:center;
+    color:var(--muted);
+    padding:60px 20px;
+    border:1px dashed var(--line);
+    border-radius:14px;
+    font-size:0.98rem;
+  }
+
+  .pg-card{
+    display:flex;
+    gap:20px;
+    text-align:left;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+    animation:rise 0.35s ease;
+  }
+
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(6px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  .pg-thumb{
+    width:96px;
+    height:96px;
+    flex-shrink:0;
+    border-radius:10px;
+    background:#EFE9D8;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .pg-thumb svg{ width:44px; height:44px; }
+
+  .pg-body{ flex:1; min-width:0; }
+
+  .pg-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+  }
+
+  .pg-body h3{
+    font-size:1.15rem;
+    font-weight:500;
+  }
+
+  .pg-location{
+    color:var(--muted);
+    font-size:0.9rem;
+    margin-top:4px;
+  }
+
+  .pg-rating{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    color:var(--brass-dark);
+    white-space:nowrap;
+  }
+
+  .pg-tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:12px;
+  }
+
+  .tag{
+    font-size:0.82rem;
+    color:var(--moss);
+    background:#EAF0EC;
+    border-radius:999px;
+    padding:5px 12px;
+  }
+
+  .pg-foot{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:14px;
+  }
+
+  .pg-price{
+    font-family:'Fraunces', serif;
+    font-size:1.05rem;
+    color:var(--moss-deep);
+  }
+  .pg-price span{
+    font-family:'Inter', sans-serif;
+    font-size:0.82rem;
+    color:var(--muted);
+  }
+
+  .pg-link{
+    font-size:0.9rem;
+    color:var(--moss-deep);
+    border-bottom:1px solid var(--brass);
+  }
+
+  @media (max-width:560px){
+    .pg-card{ flex-direction:column; }
+    .pg-thumb{ width:100%; height:140px; }
+  }
+
+  :focus-visible{
+    outline:2px solid var(--brass);
+    outline-offset:2px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="top">
+    <a href="index.html" class="brand">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M4 11L12 4L20 11V19.5C20 20.05 19.55 20.5 19 20.5H14.5V14.5H9.5V20.5H5C4.45 20.5 4 20.05 4 19.5V11Z" stroke="#23332B" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      NestFind
+    </a>
+    <nav>
+      <a href="find.html" class="active">Find a PG</a>
+      <a href="list.html">List a PG</a>
+    </nav>
+  </div>
+
+  <section class="search-wrap">
+    <h1>Find your next PG</h1>
+    <p>Search by neighbourhood, landmark, or PG name.</p>
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" stroke="#5B6A5F" stroke-width="2"/>
+        <path d="M21 21L16.5 16.5" stroke="#5B6A5F" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <input id="searchInput" type="text" placeholder="Start searching here">
+      <button class="btn btn-primary" onclick="handleSearch()">Search</button>
+    </div>
+  </section>
+
+  <div class="test-row">
+    <button class="btn btn-test" onclick="showSampleListing()">Show a sample listing (test)</button>
+  </div>
+
+  <section class="results">
+    <div class="results-head">
+      <h2>Listings near you</h2>
+      <span id="resultCount">0 results</span>
+    </div>
+    <div class="pglist" id="pglist">
+      <div class="empty-state" id="emptyState">No listings yet — try searching, or press "Show a sample listing" above to preview how one looks.</div>
+    </div>
+  </section>
+
+  <script>
+    const pglist = document.getElementById('pglist');
+    const emptyState = document.getElementById('emptyState');
+    const resultCount = document.getElementById('resultCount');
+
+    function updateCount(){
+      const cards = pglist.querySelectorAll('.pg-card').length;
+      resultCount.textContent = cards + (cards === 1 ? ' result' : ' results');
     }
-    input {
-      text-align: left;
-      height: 8%;
-      width: 80%;
-      border-radius: 25px;
+
+    function houseIcon(){
+      return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 11L12 4L20 11V19.5C20 20.05 19.55 20.5 19 20.5H5C4.45 20.5 4 20.05 4 19.5V11Z" stroke="#A9812E" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>`;
     }
-  </style>
-  </head>
-  <body>
-    <input type="text" placeholder="Start Searching Here">
-    <div class="pglist"></div>
-  </body>
+
+    function showSampleListing(){
+      emptyState.remove();
+      const card = document.createElement('div');
+      card.className = 'pg-card';
+      card.innerHTML = `
+        <div class="pg-thumb">${houseIcon()}</div>
+        <div class="pg-body">
+          <div class="pg-top">
+            <div>
+              <h3>Green Nest PG</h3>
+              <div class="pg-location">Koramangala 5th Block, Bengaluru</div>
+            </div>
+            <div class="pg-rating">4.6 ★</div>
+          </div>
+          <div class="pg-tags">
+            <span class="tag">Safety verified</span>
+            <span class="tag">Female guests allowed</span>
+            <span class="tag">3 rooms available</span>
+          </div>
+          <div class="pg-foot">
+            <div class="pg-price">₹9,500 <span>/ month</span></div>
+            <a href="#" class="pg-link">View listing</a>
+          </div>
+        </div>`;
+      pglist.prepend(card);
+      updateCount();
+    }
+
+    function handleSearch(){
+      const query = document.getElementById('searchInput').value.trim();
+      if(!query) return;
+      showSampleListing();
+    }
+
+    document.getElementById('searchInput').addEventListener('keydown', (e) => {
+      if(e.key === 'Enter') handleSearch();
+    });
+  </script>
+
+</body>
 </html>
