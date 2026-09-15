@@ -1,71 +1,357 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title> PG Finder </title>
-    <link rel="preconnect" href="https://googleapis.com">
-    <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap">
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NestFind — Find PGs Near You</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --ink:#23332B;
+    --paper:#F5F0E4;
+    --card:#FFFFFF;
+    --brass:#A9812E;
+    --brass-dark:#7E611F;
+    --moss:#3F5C4C;
+    --moss-deep:#23332B;
+    --line: rgba(35,51,43,0.14);
+    --muted:#5B6A5F;
+  }
 
-    <style>
-      html, body {
-        text-align: center;
-        font-family: Inter;
-        height: 100%;
-        width: 100%;
-      }
-      h1 {
-        color: gray;
-      }
-      h3 {
-        font-weight: lighter;
-      }
-      button {
-        height: 8%;
-        width: 89%;
-        text-align: center;
-        background-color: gainsboro;
-        border: 0px;
-        border-radius: 15px;
-        transition-duration: 0.3s;
-      }
-      button:hover{
-        background-color: lightblue;
-        height: 8.5%;
-      }
-      .section {
-        background-color: brown;
-        width: 100%;
-        height: auto;
-        display: flex;
-        align-items: center;
-      }
-      .card {
-        height: auto;
-        width: 25%;
-        margin: auto;
-        background-color: white;
-        border-radius: 15px;
-        border: 1px;
-      }
-        
-    </style>
-  </head>
-  <body>
-    <h1>NestFind - Find PG's Near You</h1>
-    <h3> PG's that are safe and compatible. All on one website</h3>
-    <a href="find.html"><button> Find PG's</button></a><br><br>
-    <a href="list.html"><button>List a PG </button></a>
-    <div class="section">
-      <h2> How it works - </h2>
-      <div class="card">
-        <p>1. If a user is looking for a PG, they can find all listed PG's in the area, sorted by rating. They can also see the conditions, including safety ratings, guests allowed, etc.</p>
-      </div>
-      <div class="card">
-        <p>2. If the user is already staying in a PG and is looking for roommates, they can list their PG, along with other things such as morning/evening person, interests, hobbies, to find the most compatible roommate for them</p>
-      </div>
-      <div class="card">
-        <p>If the user is the owner of a Pg, they can list their PG along with important safety documents, and other proofs. These images will be verified with AI to prove that they are genuine.</p>
+  *{ box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    line-height:1.5;
+  }
+
+  h1, h2, h3, .display{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    letter-spacing:-0.01em;
+    color:var(--moss-deep);
+    margin:0;
+  }
+
+  a{ color:inherit; }
+
+  /* ---------- Header ---------- */
+
+  .top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    max-width:1100px;
+    margin:0 auto;
+    padding:28px 32px 0;
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Fraunces', serif;
+    font-size:1.15rem;
+    font-weight:600;
+  }
+
+  .brand svg{ width:26px; height:26px; }
+
+  .top nav a{
+    text-decoration:none;
+    color:var(--muted);
+    font-size:0.95rem;
+    margin-left:28px;
+  }
+
+  .top nav a:hover{ color:var(--moss-deep); }
+
+  /* ---------- Hero ---------- */
+
+  .hero{
+    max-width:1100px;
+    margin:0 auto;
+    padding:64px 32px 40px;
+    display:grid;
+    grid-template-columns:1.1fr 0.9fr;
+    gap:56px;
+    align-items:center;
+  }
+
+  .hero h1{
+    font-size:clamp(2.4rem, 4.4vw, 3.6rem);
+    line-height:1.08;
+  }
+
+  .hero p.lede{
+    margin-top:20px;
+    font-size:1.1rem;
+    color:var(--muted);
+    max-width:44ch;
+  }
+
+  .cta-row{
+    display:flex;
+    gap:14px;
+    margin-top:34px;
+    flex-wrap:wrap;
+  }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:14px 24px;
+    border-radius:8px;
+    font-size:0.98rem;
+    font-weight:500;
+    text-decoration:none;
+    border:1px solid transparent;
+    cursor:pointer;
+    transition:transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .btn-primary{
+    background:var(--moss-deep);
+    color:var(--paper);
+  }
+  .btn-primary:hover{ background:var(--moss); transform:translateY(-1px); }
+
+  .btn-secondary{
+    background:transparent;
+    color:var(--moss-deep);
+    border-color:var(--line);
+  }
+  .btn-secondary:hover{ border-color:var(--moss-deep); transform:translateY(-1px); }
+
+  /* ---------- Hero illustration: a key unlocking a doorway ---------- */
+
+  .hero-art{
+    position:relative;
+    aspect-ratio:1/1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .hero-art svg{ width:100%; height:100%; }
+
+  /* ---------- Trust strip ---------- */
+
+  .trust{
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    background:#EFE9D8;
+  }
+
+  .trust-inner{
+    max-width:1100px;
+    margin:0 auto;
+    padding:22px 32px;
+    display:flex;
+    gap:40px;
+    flex-wrap:wrap;
+    justify-content:space-between;
+    font-size:0.92rem;
+    color:var(--muted);
+  }
+
+  .trust-inner strong{ color:var(--moss-deep); font-family:'Fraunces', serif; font-weight:600; }
+
+  /* ---------- How it works ---------- */
+
+  .how{
+    max-width:1100px;
+    margin:0 auto;
+    padding:84px 32px 96px;
+  }
+
+  .how-head{
+    max-width:52ch;
+    margin-bottom:48px;
+  }
+
+  .how-head h2{
+    font-size:clamp(1.8rem, 3vw, 2.3rem);
+  }
+
+  .how-head p{
+    color:var(--muted);
+    margin-top:14px;
+    font-size:1.02rem;
+  }
+
+  .steps{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:0;
+    border-top:1px solid var(--line);
+  }
+
+  .step{
+    padding:32px 28px 32px 0;
+    border-bottom:1px solid var(--line);
+  }
+
+  .step:not(:last-child){ border-right:1px solid var(--line); padding-right:28px; }
+  .step:nth-child(2){ padding-left:28px; }
+  .step:nth-child(3){ padding-left:28px; padding-right:0; }
+
+  .step-num{
+    font-family:'Fraunces', serif;
+    font-size:0.95rem;
+    color:var(--brass-dark);
+    font-weight:600;
+  }
+
+  .step h3{
+    font-size:1.25rem;
+    margin-top:14px;
+    font-weight:500;
+  }
+
+  .step p{
+    color:var(--muted);
+    margin-top:10px;
+    font-size:0.98rem;
+  }
+
+  /* ---------- Footer ---------- */
+
+  footer{
+    border-top:1px solid var(--line);
+  }
+
+  .footer-inner{
+    max-width:1100px;
+    margin:0 auto;
+    padding:32px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    color:var(--muted);
+    font-size:0.9rem;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+
+  /* ---------- Responsive ---------- */
+
+  @media (max-width: 820px){
+    .hero{ grid-template-columns:1fr; padding-top:44px; }
+    .hero-art{ order:-1; max-width:280px; margin:0 auto; }
+    .steps{ grid-template-columns:1fr; }
+    .step, .step:not(:last-child), .step:nth-child(2), .step:nth-child(3){
+      border-right:none;
+      padding-left:0;
+      padding-right:0;
+    }
+    .top{ padding:22px 20px 0; }
+    .hero{ padding-left:20px; padding-right:20px; }
+    .how{ padding-left:20px; padding-right:20px; }
+    .trust-inner{ padding-left:20px; padding-right:20px; gap:18px; }
+    .footer-inner{ padding-left:20px; padding-right:20px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; scroll-behavior:auto !important; }
+  }
+
+  :focus-visible{
+    outline:2px solid var(--brass);
+    outline-offset:2px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="top">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M4 11L12 4L20 11V19.5C20 20.05 19.55 20.5 19 20.5H14.5V14.5H9.5V20.5H5C4.45 20.5 4 20.05 4 19.5V11Z" stroke="#23332B" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      NestFind
+    </div>
+    <nav>
+      <a href="find.html">Find a PG</a>
+      <a href="list.html">List a PG</a>
+    </nav>
+  </div>
+
+  <section class="hero">
+    <div>
+      <h1>A room you're glad<br>to come home to.</h1>
+      <p class="lede">Browse verified PGs in your neighbourhood, check real safety ratings before you visit, and find a roommate whose routine actually matches yours.</p>
+      <div class="cta-row">
+        <a href="find.html" class="btn btn-primary">Find a PG</a>
+        <a href="list.html" class="btn btn-secondary">List your PG</a>
       </div>
     </div>
-  </body>
+    <div class="hero-art">
+      <svg viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustration of a doorway and a key">
+        <circle cx="160" cy="160" r="150" fill="#EFE9D8"/>
+        <rect x="96" y="118" width="128" height="150" rx="6" fill="#FFFFFF" stroke="#23332B" stroke-width="2"/>
+        <path d="M96 118C96 92 122 72 160 72C198 72 224 92 224 118" stroke="#23332B" stroke-width="2" fill="none"/>
+        <circle cx="160" cy="72" r="4" fill="#23332B"/>
+        <rect x="132" y="150" width="56" height="118" fill="#23332B"/>
+        <path d="M132 268C132 240 144 224 160 224C176 224 188 240 188 268" fill="none"/>
+        <path d="M132 268V222C132 205 144 192 160 192C176 192 188 205 188 222V268" stroke="#23332B" stroke-width="2" fill="#3F5C4C"/>
+        <circle cx="160" cy="234" r="6" fill="#F5F0E4"/>
+        <g transform="translate(206,196) rotate(28)">
+          <circle cx="0" cy="0" r="15" stroke="#A9812E" stroke-width="6" fill="#F5F0E4"/>
+          <rect x="-4" y="12" width="8" height="34" fill="#A9812E"/>
+          <rect x="-4" y="34" width="16" height="6" fill="#A9812E"/>
+          <rect x="-4" y="44" width="12" height="6" fill="#A9812E"/>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <div class="trust">
+    <div class="trust-inner">
+      <span><strong>AI-verified</strong> safety documents on every listing</span>
+      <span><strong>Rated</strong> by people who've actually stayed there</span>
+      <span><strong>Matched</strong> roommates, not just rooms</span>
+    </div>
+  </div>
+
+  <section class="how">
+    <div class="how-head">
+      <h2>How NestFind works</h2>
+      <p>Three ways in, depending on what brings you here.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Looking for a PG</h3>
+        <p>See every listed PG in your area, sorted by rating. Compare safety scores, guest policies, and house rules before you ever schedule a visit.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>Looking for a roommate</h3>
+        <p>Already staying somewhere? List your PG along with your routine — early riser or night owl, hobbies, habits — and we'll surface the most compatible match.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>Listing your property</h3>
+        <p>Owners can list a PG with safety documents and ownership proofs attached. Our AI checks each document for authenticity before the listing goes live.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-inner">
+      <span>NestFind</span>
+      <span>Find PGs that are safe and compatible — all in one place.</span>
+    </div>
+  </footer>
+
+</body>
 </html>
