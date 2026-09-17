@@ -61,6 +61,50 @@ function publicRoom(row) {
   return { ...row, available_beds: Number(row.capacity) - Number(row.occupied_beds) };
 }
 
+// All preferences are a 1–5 scale. A close score means compatible preferences.
+const matchingFactors = [
+  'sleep_schedule', 'cleanliness', 'noise_tolerance', 'social_level',
+  'guest_frequency', 'study_habits', 'food_preference', 'smoking_preference',
+  'drinking_preference', 'sharing_preference', 'temperature_preference',
+  'budget_level', 'work_schedule'
+];
+
+function validatePreferences(preferences) {
+  if (!preferences || typeof preferences !== 'object' || Array.isArray(preferences)) {
+    return 'preferences must be an object containing the 13 matching factors';
+  }
+  for (const factor of matchingFactors) {
+    const value = Number(preferences[factor]);
+    if (!Number.isInteger(value) || value < 1 || value > 5) {
+      return `${factor} must be a whole number from 1 to 5`;
+    }
+  }
+  return null;
+}
+
+function matchResult(profile, candidate) {
+  const differences = matchingFactors.map((factor) => Math.abs(
+    Number(profile.preferences[factor]) - Number(candidate.preferences[factor])
+  ));
+  const totalDifference = differences.reduce((sum, difference) => sum + difference, 0);
+  const score = Math.round((1 - totalDifference / (matchingFactors.length * 4)) * 100);
+  const closestFactors = matchingFactors
+    .map((factor, index) => ({ factor, difference: differences[index] }))
+    .sort((a, b) => a.difference - b.difference)
+    .slice(0, 3)
+    .map(({ factor }) => factor);
+  return { ...candidate, compatibility_score: score, strongest_matches: closestFactors };
+}
+
+function validateContact(body, requiredNames) {
+  for (const field of requiredNames) {
+    if (!body[field] || typeof body[field] !== 'string') return `${field} is required`;
+  }
+  if (body.applicant_email !== undefined && typeof body.applicant_email !== 'string') return 'applicant_email must be a string';
+  if (body.recipient_email !== undefined && typeof body.recipient_email !== 'string') return 'recipient_email must be a string';
+  return null;
+}
+
 app.get('/health', async (_req, res, next) => {
   try {
     await query('SELECT 1');
@@ -196,6 +240,168 @@ app.delete('/api/rooms/:id', async (req, res, next) => {
     const result = await query('DELETE FROM rooms WHERE id = $1 RETURNING id', [req.params.id]);
     if (!result.rowCount) return res.status(404).json({ error: 'Room not found' });
     res.status(204).end();
+  } catch (error) { next(error); }
+});
+
+app.get('/api/pgs/:pgId/applications', async (req, res, next) => {
+  try {
+    const result = await query(
+      `SELECT applications.*, rooms.room_number AS preferred_room_number
+       FROM applications LEFT JOIN rooms ON rooms.id = applications.preferred_room_id
+       WHERE applications.pg_id = $1 ORDER BY applications.created_at DESC`, [req.params.pgId]
+    );
+    res.json(result.rows);
+  } catch (error) { next(error); }
+});
+
+app.post('/api/pgs/:pgId/applications', async (req, res, next) => {
+  try {
+    const validationError = validateContact(req.body, ['applicant_name']);
+    if (validationError) return res.status(400).json({ error: validationError });
+    const result = await query(
+      `INSERT INTO applications
+        (pg_id, applicant_name, applicant_phone, applicant_email, preferred_room_id, move_in_date, message)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [req.params.pgId, req.body.applicant_name, req.body.applicant_phone ?? null,
+        req.body.applicant_email ?? null, req.body.preferred_room_id ?? null,
+        req.body.move_in_date ?? null, req.body.message ?? null]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    if (error.code === '23503') return res.status(404).json({ error: 'PG or preferred room not found' });
+    next(error);
+  }
+});
+
+app.patch('/api/applications/:id/status', async (req, res, next) => {
+  try {
+    const allowedStatuses = ['pending', 'accepted', 'rejected', 'withdrawn'];
+    if (!allowedStatuses.includes(req.body.status)) return res.status(400).json({ error: 'Invalid application status' });
+    const result = await query(
+      'UPDATE applications SET status = $1 WHERE id = $2 RETURNING *', [req.body.status, req.params.id]
+    );
+    if (!result.rowCount) return res.status(404).json({ error: 'Application not found' });
+    res.json(result.rows[0]);
+  } catch (error) { next(error); }
+});
+
+app.get('/api/pgs/:pgId/invites', async (req, res, next) => {
+  try {
+    const result = await query('SELECT * FROM invites WHERE pg_id = $1 ORDER BY created_at DESC', [req.params.pgId]);
+    res.json(result.rows);
+  } catch (error) { next(error); }
+});
+
+app.post('/api/pgs/:pgId/invites', async (req, res, next) => {
+  try {
+    const validationError = validateContact(req.body, ['recipient_name', 'sent_by_name']);
+    if (validationError) return res.status(400).json({ error: validationError });
+    const result = await query(
+      `INSERT INTO invites (pg_id, recipient_name, recipient_phone, recipient_email, sent_by_name, message, expires_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [req.params.pgId, req.body.recipient_name, req.body.recipient_phone ?? null,
+        req.body.recipient_email ?? null, req.body.sent_by_name, req.body.message ?? null,
+        req.body.expires_at ?? null]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    if (error.code === '23503') return res.status(404).json({ error: 'PG not found' });
+    next(error);
+  }
+});
+
+app.patch('/api/invites/:id/status', async (req, res, next) => {
+  try {
+    const allowedStatuses = ['pending', 'accepted', 'declined', 'cancelled'];
+    if (!allowedStatuses.includes(req.body.status)) return res.status(400).json({ error: 'Invalid invite status' });
+    const result = await query(
+      'UPDATE invites SET status = $1 WHERE id = $2 RETURNING *', [req.body.status, req.params.id]
+    );
+    if (!result.rowCount) return res.status(404).json({ error: 'Invite not found' });
+    res.json(result.rows[0]);
+  } catch (error) { next(error); }
+});
+
+app.get('/api/roommate-factors', (_req, res) => {
+  res.json({
+    scale: '1 means the first end of a preference; 5 means the other end. Similar values score higher.',
+    factors: matchingFactors
+  });
+});
+
+app.post('/api/roommate-profiles', async (req, res, next) => {
+  try {
+    if (!req.body.display_name || typeof req.body.display_name !== 'string') {
+      return res.status(400).json({ error: 'display_name is required' });
+    }
+    const validationError = validatePreferences(req.body.preferences);
+    if (validationError) return res.status(400).json({ error: validationError });
+    const result = await query(
+      `INSERT INTO roommate_profiles (display_name, pg_id, bio, preferences)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [req.body.display_name, req.body.pg_id ?? null, req.body.bio ?? null, JSON.stringify(req.body.preferences)]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    if (error.code === '23503') return res.status(404).json({ error: 'PG not found' });
+    next(error);
+  }
+});
+
+app.get('/api/roommate-profiles/:id', async (req, res, next) => {
+  try {
+    const result = await query('SELECT * FROM roommate_profiles WHERE id = $1', [req.params.id]);
+    if (!result.rowCount) return res.status(404).json({ error: 'Roommate profile not found' });
+    res.json(result.rows[0]);
+  } catch (error) { next(error); }
+});
+
+app.patch('/api/roommate-profiles/:id', async (req, res, next) => {
+  try {
+    if (req.body.preferences !== undefined) {
+      const validationError = validatePreferences(req.body.preferences);
+      if (validationError) return res.status(400).json({ error: validationError });
+    }
+    const editable = ['display_name', 'pg_id', 'bio', 'preferences'];
+    const entries = editable.filter((field) => req.body[field] !== undefined);
+    if (!entries.length) return res.status(400).json({ error: 'No editable fields provided' });
+    const setClause = entries.map((field, index) => `${field} = $${index + 1}`).join(', ');
+    const values = entries.map((field) => field === 'preferences'
+      ? JSON.stringify(req.body[field]) : req.body[field]);
+    const result = await query(
+      `UPDATE roommate_profiles SET ${setClause} WHERE id = $${entries.length + 1} RETURNING *`,
+      [...values, req.params.id]
+    );
+    if (!result.rowCount) return res.status(404).json({ error: 'Roommate profile not found' });
+    res.json(result.rows[0]);
+  } catch (error) {
+    if (error.code === '23503') return res.status(404).json({ error: 'PG not found' });
+    next(error);
+  }
+});
+
+app.delete('/api/roommate-profiles/:id', async (req, res, next) => {
+  try {
+    const result = await query('DELETE FROM roommate_profiles WHERE id = $1 RETURNING id', [req.params.id]);
+    if (!result.rowCount) return res.status(404).json({ error: 'Roommate profile not found' });
+    res.status(204).end();
+  } catch (error) { next(error); }
+});
+
+app.get('/api/roommate-profiles/:id/matches', async (req, res, next) => {
+  try {
+    const profileResult = await query('SELECT * FROM roommate_profiles WHERE id = $1', [req.params.id]);
+    if (!profileResult.rowCount) return res.status(404).json({ error: 'Roommate profile not found' });
+    const profile = profileResult.rows[0];
+    const limit = Math.min(Math.max(Number(req.query.limit ?? 10), 1), 50);
+    const candidatesResult = profile.pg_id
+      ? await query('SELECT * FROM roommate_profiles WHERE id <> $1 AND pg_id = $2', [profile.id, profile.pg_id])
+      : await query('SELECT * FROM roommate_profiles WHERE id <> $1', [profile.id]);
+    const matches = candidatesResult.rows
+      .map((candidate) => matchResult(profile, candidate))
+      .sort((a, b) => b.compatibility_score - a.compatibility_score)
+      .slice(0, limit);
+    res.json({ profile_id: profile.id, matching_factors: matchingFactors, matches });
   } catch (error) { next(error); }
 });
 

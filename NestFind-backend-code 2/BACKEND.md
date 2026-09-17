@@ -34,6 +34,18 @@ The API starts at `http://localhost:3001`.
 | POST | `/api/pgs/:pgId/rooms` | Create a room |
 | PATCH | `/api/rooms/:id` | Update room capacity, occupancy, or rent |
 | DELETE | `/api/rooms/:id` | Delete a room |
+| GET | `/api/pgs/:pgId/applications` | List PG applications |
+| POST | `/api/pgs/:pgId/applications` | Submit a PG application |
+| PATCH | `/api/applications/:id/status` | Accept, reject, or withdraw an application |
+| GET | `/api/pgs/:pgId/invites` | List PG invitations |
+| POST | `/api/pgs/:pgId/invites` | Send an invitation |
+| PATCH | `/api/invites/:id/status` | Accept, decline, or cancel an invitation |
+| GET | `/api/roommate-factors` | List the 13 compatibility factors |
+| POST | `/api/roommate-profiles` | Create a roommate preference profile |
+| GET | `/api/roommate-profiles/:id` | View a profile |
+| PATCH | `/api/roommate-profiles/:id` | Update a profile |
+| DELETE | `/api/roommate-profiles/:id` | Delete a profile |
+| GET | `/api/roommate-profiles/:id/matches` | Get highest-scoring matches |
 
 ### Create a PG
 
