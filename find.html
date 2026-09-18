@@ -134,6 +134,7 @@
     color:var(--paper);
   }
   .btn-primary:hover{ background:var(--moss); transform:translateY(-1px); }
+  .btn-primary:disabled{ opacity:0.6; cursor:default; transform:none; }
 
   .test-row{
     max-width:720px;
@@ -141,6 +142,8 @@
     padding:0 32px;
     display:flex;
     justify-content:center;
+    gap:12px;
+    flex-wrap:wrap;
   }
 
   .btn-test{
@@ -186,7 +189,7 @@
     gap:16px;
   }
 
-  .empty-state{
+  .empty-state, .error-state{
     text-align:center;
     color:var(--muted);
     padding:60px 20px;
@@ -194,6 +197,8 @@
     border-radius:14px;
     font-size:0.98rem;
   }
+
+  .error-state{ color:#8a4a2f; border-color:#d9b79a; background:#fbf1ea; }
 
   .pg-card{
     display:flex;
@@ -291,6 +296,13 @@
     font-size:0.9rem;
     color:var(--moss-deep);
     border-bottom:1px solid var(--brass);
+    background:none;
+    border-top:none;
+    border-left:none;
+    border-right:none;
+    cursor:pointer;
+    font-family:'Inter', sans-serif;
+    padding:0;
   }
 
   @media (max-width:560px){
@@ -325,39 +337,44 @@
 
   <section class="search-wrap">
     <h1>Find your next PG</h1>
-    <p>Search by neighbourhood, landmark, or PG name.</p>
+    <p>Search by city.</p>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <circle cx="11" cy="11" r="7" stroke="#5B6A5F" stroke-width="2"/>
         <path d="M21 21L16.5 16.5" stroke="#5B6A5F" stroke-width="2" stroke-linecap="round"/>
       </svg>
-      <input id="searchInput" type="text" placeholder="Start searching here">
-      <button class="btn btn-primary" onclick="handleSearch()">Search</button>
+      <input id="searchInput" type="text" placeholder="Enter a city, e.g. Bangalore">
+      <button class="btn btn-primary" id="searchBtn" onclick="handleSearch()">Search</button>
     </div>
   </section>
 
   <div class="test-row">
-    <button class="btn btn-test" onclick="showSampleListing()">Show a sample listing (test)</button>
+    <button class="btn btn-test" onclick="loadAll()">Show all listings</button>
+    <button class="btn btn-test" onclick="handleNearby()">Search near me</button>
   </div>
 
   <section class="results">
     <div class="results-head">
-      <h2>Listings near you</h2>
+      <h2>Listings</h2>
       <span id="resultCount">0 results</span>
     </div>
     <div class="pglist" id="pglist">
-      <div class="empty-state" id="emptyState">No listings yet — try searching, or press "Show a sample listing" above to preview how one looks.</div>
+      <div class="empty-state" id="emptyState">No listings yet — try searching, or press "Show all listings" above.</div>
     </div>
   </section>
 
   <script>
-    const pglist = document.getElementById('pglist');
-    const emptyState = document.getElementById('emptyState');
-    const resultCount = document.getElementById('resultCount');
+    // ---- Point this at your running backend ----
+    // Local dev default. Change to your deployed API URL in production.
+    const API_BASE = 'http://localhost:3000';
 
-    function updateCount(){
-      const cards = pglist.querySelectorAll('.pg-card').length;
-      resultCount.textContent = cards + (cards === 1 ? ' result' : ' results');
+    const pglist = document.getElementById('pglist');
+    const resultCount = document.getElementById('resultCount');
+    const searchBtn = document.getElementById('searchBtn');
+
+    function setLoading(isLoading){
+      searchBtn.disabled = isLoading;
+      searchBtn.textContent = isLoading ? 'Searching…' : 'Search';
     }
 
     function houseIcon(){
@@ -366,43 +383,127 @@
       </svg>`;
     }
 
-    function showSampleListing(){
-      emptyState.remove();
-      const card = document.createElement('div');
-      card.className = 'pg-card';
-      card.innerHTML = `
-        <div class="pg-thumb">${houseIcon()}</div>
-        <div class="pg-body">
-          <div class="pg-top">
-            <div>
-              <h3>Mahi Kotha</h3>
-              <div class="pg-location">Abheek House</div>
-            </div>
-            <div class="pg-rating">4.6 ★</div>
-          </div>
-          <div class="pg-tags">
-            <span class="tag">Safety verified</span>
-            <span class="tag">Transgender allowed</span>
-            <span class="tag">2 rooms available</span>
-          </div>
-          <div class="pg-foot">
-            <div class="pg-price">₹950 <span>/hour</span></div>
-            <a href="#" class="pg-link">View listing</a>
-          </div>
-        </div>`;
-      pglist.prepend(card);
-      updateCount();
+    function escapeHtml(str){
+      const div = document.createElement('div');
+      div.textContent = str ?? '';
+      return div.innerHTML;
     }
 
-    function handleSearch(){
+    function renderPgs(pgs){
+      pglist.innerHTML = '';
+
+      if (!pgs.length){
+        pglist.innerHTML = '<div class="empty-state">No listings found. Try a different city.</div>';
+        resultCount.textContent = '0 results';
+        return;
+      }
+
+      resultCount.textContent = pgs.length + (pgs.length === 1 ? ' result' : ' results');
+
+      pgs.forEach((pg) => {
+        const card = document.createElement('div');
+        card.className = 'pg-card';
+
+        const amenities = Array.isArray(pg.amenities) ? pg.amenities.slice(0, 4) : [];
+        const tagsHtml = amenities.map((a) => `<span class="tag">${escapeHtml(a)}</span>`).join('');
+        const distance = pg.distance_km !== undefined
+          ? `<span class="tag">${Number(pg.distance_km).toFixed(1)} km away</span>` : '';
+
+        card.innerHTML = `
+          <div class="pg-thumb">${houseIcon()}</div>
+          <div class="pg-body">
+            <div class="pg-top">
+              <div>
+                <h3>${escapeHtml(pg.name)}</h3>
+                <div class="pg-location">${escapeHtml(pg.address || '')}${pg.city ? ', ' + escapeHtml(pg.city) : ''}</div>
+              </div>
+            </div>
+            <div class="pg-tags">${tagsHtml}${distance}</div>
+            <div class="pg-foot">
+              <div class="pg-price">₹${Number(pg.true_monthly_rent).toLocaleString('en-IN')} <span>/month all-in</span></div>
+              <button class="pg-link" onclick="viewPg('${pg.id}')">View listing</button>
+            </div>
+          </div>`;
+        pglist.appendChild(card);
+      });
+    }
+
+    function renderError(message){
+      pglist.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
+      resultCount.textContent = '0 results';
+    }
+
+    async function fetchJson(url){
+      const res = await fetch(url);
+      if (!res.ok){
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Request failed (${res.status})`);
+      }
+      return res.json();
+    }
+
+    async function loadAll(){
+      setLoading(true);
+      try {
+        const pgs = await fetchJson(`${API_BASE}/api/pgs`);
+        renderPgs(pgs);
+      } catch (err) {
+        renderError(`Couldn't reach the server. Is the backend running at ${API_BASE}? (${err.message})`);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function handleSearch(){
       const query = document.getElementById('searchInput').value.trim();
-      if(!query) return;
-      showSampleListing();
+      if (!query){ loadAll(); return; }
+      setLoading(true);
+      try {
+        const pgs = await fetchJson(`${API_BASE}/api/pgs?city=${encodeURIComponent(query)}`);
+        renderPgs(pgs);
+      } catch (err) {
+        renderError(`Couldn't reach the server. Is the backend running at ${API_BASE}? (${err.message})`);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function handleNearby(){
+      if (!navigator.geolocation){
+        renderError('Geolocation is not supported in this browser.');
+        return;
+      }
+      setLoading(true);
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const pgs = await fetchJson(
+            `${API_BASE}/api/pgs/nearby?lat=${latitude}&lng=${longitude}&radiusKm=5`
+          );
+          renderPgs(pgs);
+        } catch (err) {
+          renderError(`Couldn't reach the server. Is the backend running at ${API_BASE}? (${err.message})`);
+        } finally {
+          setLoading(false);
+        }
+      }, () => {
+        renderError('Location permission denied — try searching by city instead.');
+        setLoading(false);
+      });
+    }
+
+    function viewPg(id){
+      // Hook this up to a detail page/route once you have one, e.g.:
+      // window.location.href = `pg.html?id=${id}`;
+      console.log('View PG', id);
     }
 
     document.getElementById('searchInput').addEventListener('keydown', (e) => {
-      if(e.key === 'Enter') handleSearch();
+      if (e.key === 'Enter') handleSearch();
     });
+
+    // Load real listings on page load
+    loadAll();
   </script>
 
 </body>
