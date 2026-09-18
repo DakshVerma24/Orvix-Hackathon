@@ -3,6 +3,9 @@ import express from 'express';
 import { query } from './db.js';
 
 export const app = express();
+app.get('/', (_req, res) => {
+  res.json({ status: 'ok', service: 'NestFind API' });
+});
 app.use(cors());
 app.use(express.json());
 
@@ -108,7 +111,7 @@ function validateContact(body, requiredNames) {
 app.get('/health', async (_req, res, next) => {
   try {
     await query('SELECT 1');
-    res.json({ status: 'ok' });
+    res.json({ status: 'ok', service: 'NestFind API', version: 'v2' });
   } catch (error) { next(error); }
 });
 
