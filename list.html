@@ -1,8 +1,503 @@
-<html>
-  <head>
-    <title> List Your PG </title>
-  </head>
-  <body>
-  <h1> List Your PG, whether you are the Owner or a guest </h1>
-  </body>
-  </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>List a PG — NestFind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --ink:#23332B;
+    --paper:#F5F0E4;
+    --card:#FFFFFF;
+    --brass:#A9812E;
+    --brass-dark:#7E611F;
+    --moss:#3F5C4C;
+    --moss-deep:#23332B;
+    --line: rgba(35,51,43,0.14);
+    --muted:#5B6A5F;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    line-height:1.5;
+  }
+
+  h1, h2, h3, .display{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    letter-spacing:-0.01em;
+    color:var(--moss-deep);
+    margin:0;
+  }
+
+  a{ color:inherit; text-decoration:none; }
+
+  /* ---------- Header ---------- */
+
+  .top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    max-width:1100px;
+    margin:0 auto;
+    padding:28px 32px 0;
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Fraunces', serif;
+    font-size:1.15rem;
+    font-weight:600;
+  }
+
+  .brand svg{ width:26px; height:26px; }
+
+  .top nav a{
+    color:var(--muted);
+    font-size:0.95rem;
+    margin-left:28px;
+  }
+
+  .top nav a:hover, .top nav a.active{ color:var(--moss-deep); }
+
+  /* ---------- Intro ---------- */
+
+  .intro-wrap{
+    max-width:720px;
+    margin:0 auto;
+    padding:56px 32px 8px;
+    text-align:center;
+  }
+
+  .intro-wrap h1{
+    font-size:clamp(1.9rem, 3.6vw, 2.5rem);
+  }
+
+  .intro-wrap p{
+    color:var(--muted);
+    margin-top:12px;
+    font-size:1.02rem;
+  }
+
+  /* ---------- Form ---------- */
+
+  .form-wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding:32px 32px 96px;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:32px;
+  }
+
+  .field{
+    margin-bottom:22px;
+  }
+
+  .field:last-child{ margin-bottom:0; }
+
+  .field label{
+    display:block;
+    font-size:0.88rem;
+    font-weight:500;
+    color:var(--moss-deep);
+    margin-bottom:8px;
+  }
+
+  .field .hint{
+    display:block;
+    font-size:0.82rem;
+    color:var(--muted);
+    margin-top:6px;
+    font-weight:400;
+  }
+
+  .field input[type="text"],
+  .field input[type="tel"],
+  .field input[type="email"],
+  .field input[type="number"],
+  .field textarea,
+  .field select{
+    width:100%;
+    font-family:'Inter', sans-serif;
+    font-size:0.98rem;
+    color:var(--ink);
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:12px 14px;
+    outline:none;
+    transition:border-color 0.15s ease;
+  }
+
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus{
+    border-color:var(--brass);
+  }
+
+  .field textarea{
+    resize:vertical;
+    min-height:88px;
+    font-family:'Inter', sans-serif;
+  }
+
+  .select-wrap{
+    position:relative;
+  }
+
+  .select-wrap::after{
+    content:'';
+    position:absolute;
+    right:16px;
+    top:50%;
+    width:9px;
+    height:9px;
+    border-right:1.5px solid var(--muted);
+    border-bottom:1.5px solid var(--muted);
+    transform:translateY(-65%) rotate(45deg);
+    pointer-events:none;
+  }
+
+  .select-wrap select{
+    appearance:none;
+    -webkit-appearance:none;
+    cursor:pointer;
+    padding-right:36px;
+  }
+
+  .role-toggle{
+    display:flex;
+    gap:10px;
+  }
+
+  .role-btn{
+    flex:1;
+    text-align:center;
+    padding:14px 12px;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--muted);
+    font-family:'Inter', sans-serif;
+    font-size:0.95rem;
+    font-weight:500;
+    cursor:pointer;
+    transition:border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  }
+
+  .role-btn:hover{ border-color:var(--brass); }
+
+  .role-btn.selected{
+    border-color:var(--moss-deep);
+    background:var(--moss-deep);
+    color:var(--paper);
+  }
+
+  .conditional-section{
+    border-top:1px solid var(--line);
+    margin-top:26px;
+    padding-top:26px;
+    display:none;
+  }
+
+  .conditional-section.visible{
+    display:block;
+    animation:rise 0.3s ease;
+  }
+
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(6px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  .section-label{
+    font-size:0.8rem;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--brass-dark);
+    font-weight:600;
+    margin-bottom:18px;
+  }
+
+  .row2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+
+  @media (max-width:520px){
+    .row2{ grid-template-columns:1fr; }
+  }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:14px 20px;
+    border-radius:9px;
+    font-size:0.98rem;
+    font-weight:500;
+    border:1px solid transparent;
+    cursor:pointer;
+    transition:transform 0.15s ease, background 0.15s ease;
+    font-family:'Inter', sans-serif;
+    width:100%;
+  }
+
+  .btn-primary{
+    background:var(--moss-deep);
+    color:var(--paper);
+    margin-top:30px;
+  }
+  .btn-primary:hover{ background:var(--moss); transform:translateY(-1px); }
+  .btn-primary:disabled{ opacity:0.6; cursor:default; transform:none; }
+
+  .status-banner{
+    display:none;
+    margin-top:18px;
+    padding:14px 16px;
+    border-radius:10px;
+    font-size:0.9rem;
+    text-align:center;
+  }
+
+  .status-banner.visible{ display:block; }
+
+  .status-banner.success{
+    background:#EAF0EC;
+    color:var(--moss);
+    border:1px solid rgba(63,92,76,0.25);
+  }
+
+  .status-banner.error{
+    background:#fbf1ea;
+    color:#8a4a2f;
+    border:1px solid #d9b79a;
+  }
+
+  :focus-visible{
+    outline:2px solid var(--brass);
+    outline-offset:2px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="top">
+    <a href="index.html" class="brand">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M4 11L12 4L20 11V19.5C20 20.05 19.55 20.5 19 20.5H14.5V14.5H9.5V20.5H5C4.45 20.5 4 20.05 4 19.5V11Z" stroke="#23332B" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      NestFind
+    </a>
+    <nav>
+      <a href="find.html">Find a PG</a>
+      <a href="list.html" class="active">List a PG</a>
+    </nav>
+  </div>
+
+  <section class="intro-wrap">
+    <h1>List your PG</h1>
+    <p>Whether you run the place or just stay there, help others find it.</p>
+  </section>
+
+  <section class="form-wrap">
+    <div class="card">
+      <form id="listForm" novalidate>
+
+        <div class="field">
+          <label for="pg-name">PG name</label>
+          <input type="text" id="pg-name" name="pg-name" placeholder="e.g. Green Nest PG" required>
+        </div>
+
+        <div class="field">
+          <label for="pg-city">City</label>
+          <input type="text" id="pg-city" name="pg-city" placeholder="e.g. Bangalore" required>
+        </div>
+
+        <div class="field">
+          <label>Are you listing as a guest or the owner?</label>
+          <div class="role-toggle" id="roleToggle" role="radiogroup" aria-label="Guest or owner">
+            <button type="button" class="role-btn" id="guestBtn" data-role="guest" role="radio" aria-checked="false">Guest</button>
+            <button type="button" class="role-btn" id="ownerBtn" data-role="owner" role="radio" aria-checked="false">Owner</button>
+          </div>
+          <input type="hidden" id="guest_or_owner" name="guest_or_owner" required>
+        </div>
+
+        <!-- Owner-only fields -->
+        <div class="conditional-section" id="ownerSection">
+          <div class="section-label">Owner details</div>
+
+          <div class="field">
+            <label for="owner-name">Your name</label>
+            <input type="text" id="owner-name" name="owner-name" placeholder="Full name">
+          </div>
+
+          <div class="row2">
+            <div class="field">
+              <label for="owner-phone">Phone number</label>
+              <input type="tel" id="owner-phone" name="owner-phone" placeholder="+91 98765 43210">
+            </div>
+            <div class="field">
+              <label for="rent">Monthly rent (all-in)</label>
+              <input type="number" id="rent" name="rent" placeholder="e.g. 12000" min="0">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="address">Address</label>
+            <input type="text" id="address" name="address" placeholder="Street, area, landmark">
+          </div>
+
+          <div class="field">
+            <label for="amenities">Amenities</label>
+            <input type="text" id="amenities" name="amenities" placeholder="WiFi, Laundry, Meals, AC (comma-separated)">
+            <span class="hint">Separate each amenity with a comma.</span>
+          </div>
+        </div>
+
+        <!-- Guest-only fields -->
+        <div class="conditional-section" id="guestSection">
+          <div class="section-label">Your experience</div>
+
+          <div class="field">
+            <label for="stay-duration">How long did you stay?</label>
+            <input type="text" id="stay-duration" name="stay-duration" placeholder="e.g. 6 months">
+          </div>
+
+          <div class="field">
+            <label for="review">Tell us about it</label>
+            <textarea id="review" name="review" placeholder="What was it like living there? Anything future tenants should know?"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="guest-contact">Your email (optional)</label>
+            <input type="email" id="guest-contact" name="guest-contact" placeholder="you@example.com">
+            <span class="hint">In case the owner wants to verify your review.</span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="submitBtn">Submit listing</button>
+        <div class="status-banner" id="statusBanner"></div>
+      </form>
+    </div>
+  </section>
+
+  <script>
+    const API_BASE = 'http://localhost:3000';
+
+    const guestBtn = document.getElementById('guestBtn');
+    const ownerBtn = document.getElementById('ownerBtn');
+    const roleInput = document.getElementById('guest_or_owner');
+    const guestSection = document.getElementById('guestSection');
+    const ownerSection = document.getElementById('ownerSection');
+    const form = document.getElementById('listForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusBanner = document.getElementById('statusBanner');
+
+    function selectRole(role){
+      roleInput.value = role;
+
+      const isGuest = role === 'guest';
+      const isOwner = role === 'owner';
+
+      guestBtn.classList.toggle('selected', isGuest);
+      guestBtn.setAttribute('aria-checked', String(isGuest));
+      ownerBtn.classList.toggle('selected', isOwner);
+      ownerBtn.setAttribute('aria-checked', String(isOwner));
+
+      guestSection.classList.toggle('visible', isGuest);
+      ownerSection.classList.toggle('visible', isOwner);
+    }
+
+    guestBtn.addEventListener('click', () => selectRole('guest'));
+    ownerBtn.addEventListener('click', () => selectRole('owner'));
+
+    function showStatus(message, type){
+      statusBanner.textContent = message;
+      statusBanner.className = `status-banner visible ${type}`;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (!roleInput.value){
+        showStatus('Please choose whether you are a guest or the owner.', 'error');
+        return;
+      }
+
+      const payload = {
+        name: document.getElementById('pg-name').value.trim(),
+        city: document.getElementById('pg-city').value.trim(),
+        role: roleInput.value,
+      };
+
+      if (roleInput.value === 'owner'){
+        payload.owner_name = document.getElementById('owner-name').value.trim();
+        payload.owner_phone = document.getElementById('owner-phone').value.trim();
+        payload.true_monthly_rent = Number(document.getElementById('rent').value) || null;
+        payload.address = document.getElementById('address').value.trim();
+        payload.amenities = document.getElementById('amenities').value
+          .split(',')
+          .map((a) => a.trim())
+          .filter(Boolean);
+      } else {
+        payload.stay_duration = document.getElementById('stay-duration').value.trim();
+        payload.review = document.getElementById('review').value.trim();
+        payload.guest_contact = document.getElementById('guest-contact').value.trim();
+      }
+
+      if (!payload.name || !payload.city){
+        showStatus('Please fill in the PG name and city.', 'error');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting…';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/pgs`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok){
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || `Request failed (${res.status})`);
+        }
+
+        showStatus('Thanks! Your listing has been submitted.', 'success');
+        form.reset();
+        selectRole(null);
+      } catch (err) {
+        showStatus(`Couldn't reach the server. Is the backend running at ${API_BASE}? (${err.message})`, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit listing';
+      }
+    });
+  </script>
+
+</body>
+</html>
