@@ -77,7 +77,7 @@
     margin:0 auto;
     padding:56px 32px 8px;
     text-align:center;
-  }
+  }e form sends field names the backend doesn't recognise, and it silently ignores them. So rent, owner name and phone wou
 
   .intro-wrap h1{
     font-size:clamp(1.9rem, 3.6vw, 2.5rem);
@@ -453,18 +453,19 @@
       };
 
       if (roleInput.value === 'owner'){
-        payload.owner_name = document.getElementById('owner-name').value.trim();
-        payload.owner_phone = document.getElementById('owner-phone').value.trim();
-        payload.true_monthly_rent = Number(document.getElementById('rent').value) || null;
+        payload.contact_name = document.getElementById('owner-name').value.trim();
+payload.contact_phone = document.getElementById('owner-phone').value.trim();
+payload.base_rent = Number(document.getElementById('rent').value) || 0;
         payload.address = document.getElementById('address').value.trim();
         payload.amenities = document.getElementById('amenities').value
           .split(',')
           .map((a) => a.trim())
           .filter(Boolean);
       } else {
-        payload.stay_duration = document.getElementById('stay-duration').value.trim();
-        payload.review = document.getElementById('review').value.trim();
-        payload.guest_contact = document.getElementById('guest-contact').value.trim();
+          payload.address = 'Not provided (guest review)';
+      payload.description = 'Stayed ' + document.getElementById('stay-duration').value.trim() + '. '
+      + document.getElementById('review').value.trim()
+    + ' Contact: ' + document.getElementById('guest-contact').value.trim();
       }
 
       if (!payload.name || !payload.city){
