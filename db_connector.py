@@ -3,8 +3,8 @@ NestFind AI — SQL <-> Python Connector
 ========================================
 Hackathon Project 2026
 
-This file connects your Python backend to the PostgreSQL database
-created by nestfind_schema.sql, and gives you ready-made functions
+This file connects Python backend to the PostgreSQL database
+created by nestfind_schema.sql, and gives ready-made functions
 for every core feature in the deck:
 
     - Users & listings
