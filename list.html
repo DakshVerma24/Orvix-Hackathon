@@ -295,6 +295,43 @@
     outline:2px solid var(--brass);
     outline-offset:2px;
   }
+  .image-preview-container{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:12px;
+  }
+.image-preview-item{ 
+  position:relative;
+  width:80px;
+  height:80px;
+  border-radius:9px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  background:#EFE9D8;
+}
+.image-preview-item img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.image-preview-item .remove-btn{
+  position:absolute;
+  top:3px;
+  right:3px;
+  background:rgba(35,51,43,0.85);
+  color:#fff;
+  border:none;
+  border-radius:50%;
+  width:20px;
+  height:20px;
+  font-size:12px;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
 
   @media (prefers-reduced-motion: reduce){
     *{ transition:none !important; animation:none !important; }
@@ -374,8 +411,14 @@
             <input type="text" id="amenities" name="amenities" placeholder="WiFi, Laundry, Meals, AC (comma-separated)">
             <span class="hint">Separate each amenity with a comma.</span>
           </div>
+          <div class="field">
+            <label for="pg-images"> PG Photos </label>
+            <input type="file" id="pg-images" name="pg-images" accept="image/*" multiple>
+            <span class="hint">Upload room, building, or amenity photos (PNG, JPG, WEBP).</span>
+            <div id="imagePreviewContainer" class="image-preview-container"></div>
+          </div>
         </div>
-
+      
         <!-- Guest-only fields -->
         <div class="conditional-section" id="guestSection">
           <div class="section-label">Your experience</div>
